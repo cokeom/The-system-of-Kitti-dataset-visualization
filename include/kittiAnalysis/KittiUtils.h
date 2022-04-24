@@ -5,6 +5,7 @@
 #include <vector>
 #include <math.h>
 #include <stdlib.h>
+#include <map>
 using namespace std;
 typedef vector< vector<float> > MATRIX;
 extern MATRIX CreateMatrix (int m, int n); // create mxn matrix
@@ -61,9 +62,12 @@ struct position {
 };
 
 extern vector <position> my_car;
+extern map <int , vector<position> > my_object; // 每一个track_id对应一个路径集合
+
 // extern int j_temp;
 // extern void test();
 extern void adjustMyCarPos(int frame, int fps, float vf, float vl, float yawn);
 void updateObjPath(vector <position>& obj, int fps, float vf, float vl, float yawn);
+extern void adjustMyObjPos(int frame, int fps, float vf, float vl, float yawn, map<int, position> obj_curr);
 #endif
 

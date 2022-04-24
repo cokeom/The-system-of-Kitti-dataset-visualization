@@ -30,6 +30,7 @@ KittiFrame::KittiFrame() { //construct
 void KittiFrame::init() {
     marker_array.markers.clear();
     marker_array_path.markers.clear();
+    obj_center.clear();
 }
 void KittiFrame::setFrameNum(int frame) {
     frame_number = frame;
@@ -336,6 +337,10 @@ void KittiFrame::adjustMy3dBox() {
         p2.x = location_velo[0][2];
         p2.y = location_velo[1][2];
         p2.z = location_velo[2][2];
+
+        obj_center[tracking_objects[i].tk_id].x = (p0.x + p2.x)/2;
+        obj_center[tracking_objects[i].tk_id].y = (p0.y + p2.y)/2;
+        // yawn is not used
         geometry_msgs::Point p3;
         p3.x = location_velo[0][3];
         p3.y = location_velo[1][3];
@@ -476,9 +481,7 @@ void KittiFrame::publishIMU() {
 }
 
 TRANSMYCAR KittiFrame::getMyCarTrans() {
-
     return my_car_trans;
-
 }
 
 void KittiFrame::publishMyCarPath(vector <position> my_car_path) {
@@ -512,6 +515,54 @@ void KittiFrame::publishMyCarPath(vector <position> my_car_path) {
         marker_my_car.points.push_back(p);
     }
     //cout<< my_car_path[0].x << " " <<my_car_path[0].y << " " <<endl;
-    marker_array_path.markers.push_back( marker_my_car );
-    pub_path_array.publish(marker_array_path);
+    //marker_array_path.markers.push_back( marker_my_car );
+    //cout << "markers array size = " <<marker_array_path.markers.size()<<endl;
+   
+}
+
+std::map <int , position > KittiFrame::getMyObjPos() {
+    return obj_center;
+}
+void KittiFrame::publishMyObjPath(map <int , vector<position> > my_obj_path) {
+    int size1 = tracking_objects.size();
+    //cout<< "tracking_objects size" << size1 <<endl;
+    for(int i=0; i < size1; i++)
+    {
+        if(tracking_objects[i].tk_id == -1)continue;
+
+        visualization_msgs::Marker marker_my_obj;
+        marker_my_obj.header.frame_id = "point_cloud" ;
+        marker_my_obj.header.stamp = ros::Time(); //attention
+        marker_my_obj.ns = "my_namespace"; 
+        marker_my_obj.id = i+5000;
+        marker_my_obj.type = visualization_msgs::Marker::LINE_STRIP;
+        marker_my_obj.action = visualization_msgs::Marker::ADD;
+        marker_my_obj.lifetime = ros::Duration(0);
+
+        marker_my_obj.scale.x = 0.2;
+        marker_my_obj.scale.y = 0.2;
+        marker_my_obj.scale.z = 0.2;
+
+        marker_my_obj.color.a = 1.0; //if not 1.0 , it can't visualize
+        marker_my_obj.color.r = 1.0;
+        marker_my_obj.color.g = 0.0;
+        marker_my_obj.color.b = 0.0;
+
+        int size2 = my_object[tracking_objects[i].tk_id].size();
+        //cout<< size2 <<endl;
+        cout << "my_object" << tracking_objects[i].tk_id << " size="<<size2<<endl;
+        int j=0;
+        if(size2 >= 20)j = size2 - 20; //目的是让记录的点只展现最多20个
+        for(; j<size2; j++) {
+            geometry_msgs::Point p;
+            p.x = my_object[tracking_objects[i].tk_id][j].x;
+            p.y = my_object[tracking_objects[i].tk_id][j].y;
+            p.z = 0.;
+            marker_my_obj.points.push_back(p);
+            cout << "my_object " << tracking_objects[i].tk_id << "point is " <<"("<<p.x <<","<<p.y<<")"<<endl;
+        }
+        //cout<< my_car_path[0].x << " " <<my_car_path[0].y << " " <<endl;
+        marker_array_path.markers.push_back( marker_my_obj );
+         pub_path_array.publish(marker_array_path);
+    }
 }

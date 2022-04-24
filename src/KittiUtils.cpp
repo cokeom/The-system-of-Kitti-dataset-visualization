@@ -1,6 +1,8 @@
 #include <kittiAnalysis/KittiUtils.h>
 using namespace std;
 
+vector <position> my_car;
+map <int , vector<position> > my_object;
 MATRIX CreateMatrix(int m, int n) {
     vector< vector<float> > v;
     for (int i=0; i<m; i++) {
@@ -9,8 +11,6 @@ MATRIX CreateMatrix(int m, int n) {
     }
     return v;
 }
-
-
 MATRIX R_roty(float yawn) { // rotated by y
     MATRIX R_temp = CreateMatrix(3,3);
     R_temp[0][0] = cos(yawn);
@@ -194,15 +194,11 @@ MATRIX CamToVelo (MATRIX A, MATRIX R0_rect, MATRIX Tvelo_cam){
     return MultiplyMatrix(Trans_Matrix, A);
     //return A;
 }
-// int j_temp = 2;
-// void test(){
-//     j_temp = 1;
-//     cout<<j_temp<<endl;
-// }
-vector <position> my_car;
 
 void updateObjPath(vector <position>& obj, int fps, float vf, float vl, float yawn) {
     int size = obj.size();
+    if(size == 0) return ; // 如果是初次加入，则不需要更新
+
     float distance = sqrt(vf*vf + vl*vl) * 1.0/fps; 
     float det_yawn = yawn - obj[size-1].yawn;
     for(int i=0; i < size; ++i) {
@@ -227,5 +223,40 @@ void adjustMyCarPos(int frame, int fps, float vf, float vl, float yawn) {
     temp.y = 0;
     temp.yawn = yawn;
     my_car.push_back(temp);
+    return ;
+}
+
+void adjustMyObjPos(int frame, int fps, float vf, float vl, float yawn, map<int, position> obj_curr) {
+    position temp;
+    if(frame == 0 ) {
+        for(int i = 0;i < my_object.size();i++){
+            my_object[i].clear();
+        }
+        my_object.clear();
+        
+        map<int, position >::iterator it = obj_curr.begin();
+        for(it = obj_curr.begin(); it != obj_curr.end(); it++) {
+            int track_id = it->first;
+            position track_pos = it->second;
+            track_pos.yawn = yawn;
+            my_object[track_id].push_back(track_pos);
+        }
+        return ;
+	}
+
+    map<int, vector<position> >::iterator it_obj = my_object.begin(); //从头更新旧的坐标
+    for(it_obj = my_object.begin(); it_obj != my_object.end(); it_obj++) { //所有更新，不管有无出现
+        int track_id = it_obj->first;
+        //vector<position> track_pos = it_obj->second;
+        updateObjPath(it_obj->second, fps, vf, vl, yawn);
+    }
+
+    map<int, position >::iterator it_curr = obj_curr.begin();
+    for(it_curr = obj_curr.begin(); it_curr != obj_curr.end(); it_curr++) { //加入出现的物体位置
+        int track_id = it_curr->first;
+        position track_pos = it_curr->second;
+        track_pos.yawn = yawn;
+        my_object[track_id].push_back(track_pos);
+    }
     return ;
 }

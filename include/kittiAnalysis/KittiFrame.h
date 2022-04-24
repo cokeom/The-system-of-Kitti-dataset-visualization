@@ -57,7 +57,8 @@ public:
     TRANSMYCAR getMyCarTrans();
     void publishMyCarPath(vector <position> my_car_path);
     // void adjustMyCarPath(float x, float y);    
-
+    std::map <int , position > getMyObjPos();
+    void publishMyObjPath(map <int , vector<position> > my_obj_path);
 
 protected:
 
@@ -107,4 +108,6 @@ protected:
     visualization_msgs::MarkerArray marker_array_path;
     ros::NodeHandle nh_path_array;
     ros::Publisher pub_path_array;
+
+    std::map <int , position > obj_center;
 };
