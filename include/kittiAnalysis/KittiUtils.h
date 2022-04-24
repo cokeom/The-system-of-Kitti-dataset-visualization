@@ -64,6 +64,6 @@ extern vector <position> my_car;
 // extern int j_temp;
 // extern void test();
 extern void adjustMyCarPos(int frame, int fps, float vf, float vl, float yawn);
-
+void updateObjPath(vector <position>& obj, int fps, float vf, float vl, float yawn);
 #endif
 

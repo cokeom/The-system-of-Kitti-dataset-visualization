@@ -200,6 +200,17 @@ MATRIX CamToVelo (MATRIX A, MATRIX R0_rect, MATRIX Tvelo_cam){
 //     cout<<j_temp<<endl;
 // }
 vector <position> my_car;
+
+void updateObjPath(vector <position>& obj, int fps, float vf, float vl, float yawn) {
+    int size = obj.size();
+    float distance = sqrt(vf*vf + vl*vl) * 1.0/fps; 
+    float det_yawn = yawn - obj[size-1].yawn;
+    for(int i=0; i < size; ++i) {
+    obj[i].x = obj[i].x * cos(det_yawn) + obj[i].y * sin(det_yawn) - distance;
+    obj[i].y = -1 * obj[i].x * sin(det_yawn) + obj[i].y * cos(det_yawn); 
+    obj[i].yawn = 0.0;
+    }
+}
 void adjustMyCarPos(int frame, int fps, float vf, float vl, float yawn) {
     position temp;
     if(frame == 0 ) {
@@ -210,18 +221,8 @@ void adjustMyCarPos(int frame, int fps, float vf, float vl, float yawn) {
         my_car.push_back(temp);
         return ;
     }
-    float distance = sqrt(vf*vf + vl*vl) * 1.0/fps; 
-   
-    int size = my_car.size();
-    float det_yawn = yawn - my_car[size-1].yawn;
-
-    for(int i=0; i < size; ++i) {
-        my_car[i].x = my_car[i].x * cos(det_yawn) + my_car[i].y * sin(det_yawn) - distance;
-        my_car[i].y = -1 * my_car[i].x * sin(det_yawn) + my_car[i].y * cos(det_yawn); 
-        my_car[i].yawn = 0.0;
-        
-        //cout<< my_car[i].x << " " << my_car[i].y << " " << distance <<" "<< det_yawn <<endl;
-    }
+    updateObjPath(my_car, fps, vf, vl, yawn);
+     //cout<< my_car[i].x << " " << my_car[i].y << " " << distance <<" "<< det_yawn <<endl;
     temp.x = 0;
     temp.y = 0;
     temp.yawn = yawn;
