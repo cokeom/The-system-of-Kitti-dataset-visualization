@@ -190,9 +190,9 @@ void KittiFrame::adjustMyCar() {
     marker_car.pose.orientation.z = 1.0;
     marker_car.pose.orientation.w = 1.0;
 
-    marker_car.scale.x = 1;
-    marker_car.scale.y = 1;
-    marker_car.scale.z = 1;
+    marker_car.scale.x = 1.2;
+    marker_car.scale.y = 1.2;
+    marker_car.scale.z = 1.2;
 
     marker_car.color.a = 1.0; //if not 1.0 , it can't visualize
     marker_car.color.r = 1.0;

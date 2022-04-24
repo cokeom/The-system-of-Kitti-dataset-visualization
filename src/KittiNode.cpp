@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
         kittiFrame.loadPclFile();
         kittiFrame.publishPcl();
     
-        kittiFrame.setMyCarPath("file://" + ROOT_DATA_PATH + "/Audi_R8/Models/Audi_R8.dae");
+        kittiFrame.setMyCarPath("file://" + ROOT_DATA_PATH + "/Car-Model/Car.dae");
         kittiFrame.adjustMyCar();
         kittiFrame.adjustMyStrip();
         kittiFrame.loadCaliMatrix(r0_rect, tvelo_cam);
