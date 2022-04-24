@@ -179,7 +179,7 @@ void KittiFrame::adjustMyCar() {
  //   marker.type = visualization_msgs::Marker::SPHERE;
     marker_car.action = visualization_msgs::Marker::ADD;
     marker_car.type = visualization_msgs::Marker::MESH_RESOURCE;
-    marker_car.lifetime = ros::Duration(0);
+    marker_car.lifetime = ros::Duration(0.1);
     
     marker_car.pose.position.x = 0;
     marker_car.pose.position.y = 0;
@@ -307,13 +307,13 @@ void KittiFrame::adjustMy3dBox() {
         MATRIX location_velo = CamToVelo(location_cam, R0_rect, Tvelo_cam); // transform into location in velo coordiation
 
         visualization_msgs::Marker line_list;
-
+        line_list.header.stamp = ros::Time(); //attention
         line_list.header.frame_id = "point_cloud" ;
         line_list.ns = "my_namespace"; 
-        line_list.id = i+3;
+        line_list.id = i+3000;
         line_list.type = visualization_msgs::Marker::LINE_LIST;
         line_list.action = visualization_msgs::Marker::ADD;
-        line_list.lifetime = ros::Duration(0.5);
+        line_list.lifetime = ros::Duration(0.1);
 
         line_list.scale.x = 0.1;
         // Line list is red
@@ -391,13 +391,13 @@ void KittiFrame::adjustMy3dBox() {
         marker_array.markers.push_back( line_list );
        //cout<<"markerArray.markers.size()"<<marker_array.markers.size()<<endl; 
         visualization_msgs::Marker box_text;
-
+        box_text.header.stamp = ros::Time(); //attention
         box_text.header.frame_id = "point_cloud" ;
         box_text.ns = "my_namespace"; 
         box_text.id = i+160;
         box_text.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
         box_text.action = visualization_msgs::Marker::ADD;
-        box_text.lifetime = ros::Duration(0.5);
+        box_text.lifetime = ros::Duration(0.1);
 
         box_text.scale.z = 1;
         //ROS_INFO_STREAM("123123");
@@ -506,7 +506,7 @@ void KittiFrame::publishMyCarPath(vector <position> my_car_path) {
     marker_my_car.color.b = 0.0;
 
     int size = my_car_path.size();
-    cout<< size <<endl;
+    //cout<< size <<endl;
     for(int i=0; i<size; i++) {
         geometry_msgs::Point p;
         p.x = my_car_path[i].x;
@@ -515,7 +515,8 @@ void KittiFrame::publishMyCarPath(vector <position> my_car_path) {
         marker_my_car.points.push_back(p);
     }
     //cout<< my_car_path[0].x << " " <<my_car_path[0].y << " " <<endl;
-    //marker_array_path.markers.push_back( marker_my_car );
+    marker_array_path.markers.push_back( marker_my_car );
+    pub_path_array.publish(marker_array_path);
     //cout << "markers array size = " <<marker_array_path.markers.size()<<endl;
    
 }
@@ -537,7 +538,7 @@ void KittiFrame::publishMyObjPath(map <int , vector<position> > my_obj_path) {
         marker_my_obj.id = i+5000;
         marker_my_obj.type = visualization_msgs::Marker::LINE_STRIP;
         marker_my_obj.action = visualization_msgs::Marker::ADD;
-        marker_my_obj.lifetime = ros::Duration(0);
+        marker_my_obj.lifetime = ros::Duration(0.1);
 
         marker_my_obj.scale.x = 0.2;
         marker_my_obj.scale.y = 0.2;
@@ -550,7 +551,7 @@ void KittiFrame::publishMyObjPath(map <int , vector<position> > my_obj_path) {
 
         int size2 = my_object[tracking_objects[i].tk_id].size();
         //cout<< size2 <<endl;
-        cout << "my_object" << tracking_objects[i].tk_id << " size="<<size2<<endl;
+        //cout << "my_object" << tracking_objects[i].tk_id << " size="<<size2<<endl;
         int j=0;
         if(size2 >= 20)j = size2 - 20; //目的是让记录的点只展现最多20个
         for(; j<size2; j++) {
@@ -559,10 +560,10 @@ void KittiFrame::publishMyObjPath(map <int , vector<position> > my_obj_path) {
             p.y = my_object[tracking_objects[i].tk_id][j].y;
             p.z = 0.;
             marker_my_obj.points.push_back(p);
-            cout << "my_object " << tracking_objects[i].tk_id << "point is " <<"("<<p.x <<","<<p.y<<")"<<endl;
+            //cout << "my_object " << tracking_objects[i].tk_id << "point is " <<"("<<p.x <<","<<p.y<<")"<<endl;
         }
         //cout<< my_car_path[0].x << " " <<my_car_path[0].y << " " <<endl;
         marker_array_path.markers.push_back( marker_my_obj );
-         pub_path_array.publish(marker_array_path);
+       
     }
 }

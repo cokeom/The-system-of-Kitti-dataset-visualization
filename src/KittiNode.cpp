@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
     KittiFrame kittiFrame;
     kittiFrame.setTrackPath(ROOT_DATA_PATH + "/training/label_02/0000.txt");
     
-    ros::Rate loop_rate(12);
+    ros::Rate loop_rate(10);
     while(ros::ok()) {
         std::stringstream buffer;
         buffer << setfill('0') << setw(10) << frame; 
@@ -58,8 +58,8 @@ int main(int argc, char **argv) {
         TRANSMYCAR my_car_trans = kittiFrame.getMyCarTrans();
         map <int , position> obj_curr = kittiFrame.getMyObjPos();
         //int temp =  kittiFrame.getMyObjPos().size();
-        cout<< "obj_curr size = " << obj_curr.size() <<endl;
-        cout<< "my_object size = " << my_object.size() <<endl;
+        //cout<< "obj_curr size = " << obj_curr.size() <<endl;
+        //cout<< "my_object size = " << my_object.size() <<endl;
         adjustMyObjPos(frame, 10, my_car_trans.vf, my_car_trans.vl, my_car_trans.yawn, obj_curr);
         kittiFrame.publishMyObjPath(my_object);
 
