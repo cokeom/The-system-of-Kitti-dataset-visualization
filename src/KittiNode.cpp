@@ -18,6 +18,8 @@ float tvelo_cam[4][4] = {
                           { 9.998621e-01,  7.523790e-03,  1.480755e-02, -2.717806e-01},
                           {           0.,           0.,            0.,            1.0}    
                         };
+//vector <position> my_car;
+//extern int j_temp;
 int main(int argc, char **argv) {
     std::string DATA_PATH = "/mnt/hgfs/shares/3dObjectDect/2011_09_26/2011_09_26_drive_0005_sync";
     std::string ROOT_DATA_PATH = "/mnt/hgfs/shares/3dObjectDect";
@@ -25,8 +27,8 @@ int main(int argc, char **argv) {
     int frame = 0;
     KittiFrame kittiFrame;
     kittiFrame.setTrackPath(ROOT_DATA_PATH + "/training/label_02/0000.txt");
-    //ROOT_DATA_PATH + "/training/label_02/0000.txt"
-    ros::Rate loop_rate(13);
+    
+    ros::Rate loop_rate(12);
     while(ros::ok()) {
         std::stringstream buffer;
         buffer << setfill('0') << setw(10) << frame; 
@@ -35,6 +37,8 @@ int main(int argc, char **argv) {
         kittiFrame.setFrameNum(frame);
         kittiFrame.loadTrackFile();
         kittiFrame.publishImage();
+
+        MATRIX A;
 
         kittiFrame.setPclPath(DATA_PATH + "/velodyne_points/data/" + buffer.str() + ".bin");
         kittiFrame.loadPclFile();
@@ -49,7 +53,12 @@ int main(int argc, char **argv) {
 
         kittiFrame.setIMUPath(DATA_PATH + "/oxts/data/" + buffer.str() + ".txt");
         kittiFrame.loadIMUFile();
+ 
         kittiFrame.publishIMU();
+        TRANSMYCAR my_car_trans = kittiFrame.getMyCarTrans();
+        // cout<< my_car_trans.vf << " " << my_car_trans.vl << " " <<my_car_trans.yawn<<endl;//
+        adjustMyCarPos(frame, 10, my_car_trans.vf, my_car_trans.vl, my_car_trans.yawn); // fps = 10
+        kittiFrame.publishMyCarPath(my_car);
 
         if(frame==153)frame=0;
         else frame++;

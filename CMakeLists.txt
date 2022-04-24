@@ -164,8 +164,8 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/3dObjectCpp_node.cpp)
-add_executable (KittiNode src/KittiFrame.cpp
-src/KittiNode.cpp src/KittiUtils.cpp)
+add_executable (KittiNode src/KittiNode.cpp src/KittiFrame.cpp
+ src/KittiUtils.cpp)
 target_link_libraries (KittiNode ${PCL_LIBRARIES} ${OpenCV_LIBS} ${catkin_LIBRARIES} ${Eigen3_LIBRARIES} 
     )
 ## Rename C++ executable without prefix

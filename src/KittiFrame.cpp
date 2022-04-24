@@ -21,7 +21,7 @@ KittiFrame::KittiFrame() { //construct
     marker_array.markers.clear();
 
     pub_IMU = nh_IMU.advertise <sensor_msgs::Imu> ("Imu" , 20);
-
+    pub_path_array = nh_path_array.advertise<visualization_msgs::MarkerArray> ( "visualization_marker_path", 30);
     tracking_offset = 0;
 
     R0_rect = CreateMatrix(4,4);
@@ -29,6 +29,7 @@ KittiFrame::KittiFrame() { //construct
 }
 void KittiFrame::init() {
     marker_array.markers.clear();
+    marker_array_path.markers.clear();
 }
 void KittiFrame::setFrameNum(int frame) {
     frame_number = frame;
@@ -383,12 +384,12 @@ void KittiFrame::adjustMy3dBox() {
         line_list.points.push_back(p7);
         line_list.points.push_back(p3);   
         marker_array.markers.push_back( line_list );
-       cout<<"markerArray.markers.size()"<<marker_array.markers.size()<<endl; 
+       //cout<<"markerArray.markers.size()"<<marker_array.markers.size()<<endl; 
         visualization_msgs::Marker box_text;
 
         box_text.header.frame_id = "point_cloud" ;
         box_text.ns = "my_namespace"; 
-        box_text.id = i+1000;
+        box_text.id = i+160;
         box_text.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
         box_text.action = visualization_msgs::Marker::ADD;
         box_text.lifetime = ros::Duration(0.5);
@@ -413,7 +414,7 @@ void KittiFrame::adjustMy3dBox() {
 
         marker_array.markers.push_back( box_text );
         
-         cout<<"markerArray.markers.size() af"<<marker_array.markers.size()<<endl;
+        // cout<<"markerArray.markers.size() af"<<marker_array.markers.size()<<endl;
     }
 }
 void KittiFrame::publishMarkerArray() {
@@ -436,14 +437,17 @@ void KittiFrame::loadIMUFile() {
 
     infile.seekg(0, ios::beg);
 
-    infile >> oxts_unit[0] >> oxts_unit[1] >> oxts_unit[2]; 
-    infile >> angle[0] >> angle[1] >> angle[2];
-    infile >> velocity[0] >> velocity[1] >> velocity[2] >> velocity[3] >> velocity[4];
-    infile >> acceleration[0] >> acceleration[1] >> acceleration[2] >> acceleration[3] >> acceleration[4] >> acceleration[5];
-    infile >> angular_rate[0] >> angular_rate[1] >> angular_rate[2] >> angular_rate[3] >> angular_rate[4] >> angular_rate[5];
-    infile >> accuracy[0] >> accuracy[1];
-    infile >> primary_GPS_receiver[0] >> primary_GPS_receiver[1] >> primary_GPS_receiver[2] >> primary_GPS_receiver[3] >> primary_GPS_receiver[4];
+    infile >> my_car_imu.oxts_unit[0] >> my_car_imu.oxts_unit[1] >> my_car_imu.oxts_unit[2]; 
+    infile >> my_car_imu.angle[0] >> my_car_imu.angle[1] >> my_car_imu.angle[2];
+    infile >> my_car_imu.velocity[0] >> my_car_imu.velocity[1] >> my_car_imu.velocity[2] >> my_car_imu.velocity[3] >> my_car_imu.velocity[4];
+    infile >> my_car_imu.acceleration[0] >> my_car_imu.acceleration[1] >> my_car_imu.acceleration[2] >> my_car_imu.acceleration[3] >> my_car_imu.acceleration[4] >> my_car_imu.acceleration[5];
+    infile >> my_car_imu.angular_rate[0] >> my_car_imu.angular_rate[1] >> my_car_imu.angular_rate[2] >> my_car_imu.angular_rate[3] >> my_car_imu.angular_rate[4] >> my_car_imu.angular_rate[5];
+    infile >> my_car_imu.accuracy[0] >> my_car_imu.accuracy[1];
+    infile >> my_car_imu.primary_GPS_receiver[0] >> my_car_imu.primary_GPS_receiver[1] >> my_car_imu.primary_GPS_receiver[2] >> my_car_imu.primary_GPS_receiver[3] >> my_car_imu.primary_GPS_receiver[4];
    // ROS_INFO("%f",angle[0]);
+    my_car_trans.vl = my_car_imu.velocity[2];
+    my_car_trans.vf = my_car_imu.velocity[3];
+    my_car_trans.yawn = my_car_imu.angle[2];
     infile.close(); 
 
 }
@@ -452,16 +456,16 @@ void KittiFrame::publishIMU() {
     IMU_data.header.stamp = ros::Time::now();
     IMU_data.header.frame_id = "point_cloud";
 
-    IMU_data.linear_acceleration.x = acceleration[3]; 
-    IMU_data.linear_acceleration.y = acceleration[4];
-    IMU_data.linear_acceleration.z = acceleration[5];
+    IMU_data.linear_acceleration.x = my_car_imu.acceleration[3]; 
+    IMU_data.linear_acceleration.y = my_car_imu.acceleration[4];
+    IMU_data.linear_acceleration.z = my_car_imu.acceleration[5];
 
 	//角速度
-    IMU_data.angular_velocity.x = angular_rate[3]; 
-    IMU_data.angular_velocity.y = angular_rate[4]; 
-    IMU_data.angular_velocity.z = angular_rate[5];
+    IMU_data.angular_velocity.x = my_car_imu.angular_rate[3]; 
+    IMU_data.angular_velocity.y = my_car_imu.angular_rate[4]; 
+    IMU_data.angular_velocity.z = my_car_imu.angular_rate[5];
 
-    tf::Quaternion q = tf::createQuaternionFromRPY(angular_rate[0],angular_rate[1],angular_rate[2]);
+    tf::Quaternion q = tf::createQuaternionFromRPY(my_car_imu.angular_rate[0], my_car_imu.angular_rate[1], my_car_imu.angular_rate[2]);
     IMU_data.orientation.x = q.getX();
     IMU_data.orientation.y = q.getY();
     IMU_data.orientation.z = q.getZ();
@@ -469,4 +473,45 @@ void KittiFrame::publishIMU() {
   //  ROS_INFO("%f",IMU_data.orientation.w);
   
     pub_IMU.publish(IMU_data);
+}
+
+TRANSMYCAR KittiFrame::getMyCarTrans() {
+
+    return my_car_trans;
+
+}
+
+void KittiFrame::publishMyCarPath(vector <position> my_car_path) {
+    
+    visualization_msgs::Marker marker_my_car;
+
+    marker_my_car.header.frame_id = "point_cloud" ;
+    marker_my_car.header.stamp = ros::Time(); //attention
+    marker_my_car.ns = "my_namespace"; 
+    marker_my_car.id = 2000;
+    marker_my_car.type = visualization_msgs::Marker::LINE_STRIP;
+    marker_my_car.action = visualization_msgs::Marker::ADD;
+    marker_my_car.lifetime = ros::Duration(0);
+
+    marker_my_car.scale.x = 0.2;
+    marker_my_car.scale.y = 0.2;
+    marker_my_car.scale.z = 0.2;
+
+    marker_my_car.color.a = 1.0; //if not 1.0 , it can't visualize
+    marker_my_car.color.r = 1.0;
+    marker_my_car.color.g = 0.0;
+    marker_my_car.color.b = 0.0;
+
+    int size = my_car_path.size();
+    cout<< size <<endl;
+    for(int i=0; i<size; i++) {
+        geometry_msgs::Point p;
+        p.x = my_car_path[i].x;
+        p.y = my_car_path[i].y;
+        p.z = 0.;
+        marker_my_car.points.push_back(p);
+    }
+    //cout<< my_car_path[0].x << " " <<my_car_path[0].y << " " <<endl;
+    marker_array_path.markers.push_back( marker_my_car );
+    pub_path_array.publish(marker_array_path);
 }

@@ -194,3 +194,37 @@ MATRIX CamToVelo (MATRIX A, MATRIX R0_rect, MATRIX Tvelo_cam){
     return MultiplyMatrix(Trans_Matrix, A);
     //return A;
 }
+// int j_temp = 2;
+// void test(){
+//     j_temp = 1;
+//     cout<<j_temp<<endl;
+// }
+vector <position> my_car;
+void adjustMyCarPos(int frame, int fps, float vf, float vl, float yawn) {
+    position temp;
+    if(frame == 0 ) {
+        my_car.clear();
+        temp.x = 0;
+        temp.y = 0;
+        temp.yawn = yawn;
+        my_car.push_back(temp);
+        return ;
+    }
+    float distance = sqrt(vf*vf + vl*vl) * 1.0/fps; 
+   
+    int size = my_car.size();
+    float det_yawn = yawn - my_car[size-1].yawn;
+
+    for(int i=0; i < size; ++i) {
+        my_car[i].x = my_car[i].x * cos(det_yawn) + my_car[i].y * sin(det_yawn) - distance;
+        my_car[i].y = -1 * my_car[i].x * sin(det_yawn) + my_car[i].y * cos(det_yawn); 
+        my_car[i].yawn = 0.0;
+        
+        //cout<< my_car[i].x << " " << my_car[i].y << " " << distance <<" "<< det_yawn <<endl;
+    }
+    temp.x = 0;
+    temp.y = 0;
+    temp.yawn = yawn;
+    my_car.push_back(temp);
+    return ;
+}

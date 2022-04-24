@@ -28,27 +28,6 @@
 class KittiFrame {
 
 public:
-
-    struct trackObject{
-        int tk_frame;
-        int tk_id;
-        std::string tk_type;
-        int tk_truncated;
-        int tk_occluded;
-        float tk_alpha;
-        float tk_bbox[4];
-        float tk_dimensions[3]; // height, width, length
-        float tk_location[3]; // location x,y,z in camera coordinates (in meters)
-        float rotation_y;
-        float score;
-    };
-
-    struct color{
-        int b;
-        int g;
-        int r;
-    };
-    
     std::map <std::string, color> COLOR_TYPE;
 
     KittiFrame();
@@ -75,8 +54,13 @@ public:
     void loadIMUFile();
     void publishIMU();
 
-    
+    TRANSMYCAR getMyCarTrans();
+    void publishMyCarPath(vector <position> my_car_path);
+    // void adjustMyCarPath(float x, float y);    
+
+
 protected:
+
     int frame_number;
     MATRIX R0_rect;
     MATRIX Tvelo_cam;
@@ -107,20 +91,20 @@ protected:
 //Marker 3DBOX
     // vector <visualization_msgs::Marker> 3DBoxMarkers; //it's unnessary.
 
-//IMU&&GPS
-    float oxts_unit[3]; //latitude longitude altitude
-    float angle[3]; // roll pitch yawn 
-    float velocity[5];  //vn ve vl vf vu
-    float acceleration[6]; //ax ay az af al au
-    float angular_rate[6]; //wx wy wz wf wl wu
-    float accuracy[2]; //pos_accuracy vel_accuracy
-    int primary_GPS_receiver[5]; //perhaps unuseful
+// IMU&&GPS
+    IMUMYCAR my_car_imu;
+    TRANSMYCAR my_car_trans;
     std::string IMU_path;
     ros::NodeHandle nh_IMU;
     ros::Publisher pub_IMU;
 
 
-//tracking
+// tracking
     long tracking_offset;
     std::vector <trackObject> tracking_objects;
+
+// object motion path
+    visualization_msgs::MarkerArray marker_array_path;
+    ros::NodeHandle nh_path_array;
+    ros::Publisher pub_path_array;
 };
