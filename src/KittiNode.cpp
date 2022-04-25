@@ -29,14 +29,15 @@ float my_car_box[3][8] =
 
 int main(int argc, char **argv) {
     std::string DATA_PATH = "/mnt/hgfs/shares/3dObjectDect/2011_09_26/2011_09_26_drive_0005_sync";
-    std::string ROOT_DATA_PATH = "/mnt/hgfs/shares/3dObjectDect";
-    ros::init(argc, argv, "KittiNode");
+    std::string ROOT_DATA_PATH = "/mnt/hgfs/shares/3dObjectDect"; 
+    ros::init(argc, argv, "KittiNode"); // ROS node 
     int frame = 0;
     KittiFrame kittiFrame;
-    kittiFrame.setTrackPath(ROOT_DATA_PATH + "/training/label_02/0000.txt");
+    kittiFrame.setTrackPath(ROOT_DATA_PATH + "/training/label_02/0000.txt"); // tracking files path
     
-    ros::Rate loop_rate(10);
+    ros::Rate loop_rate(10); // sleep 0.1s , fps 10
     while(ros::ok()) {
+        ROS_INFO("Now IM publishing frame! %d",frame);
         std::stringstream buffer;
         buffer << setfill('0') << setw(10) << frame; 
         kittiFrame.init();
@@ -44,8 +45,6 @@ int main(int argc, char **argv) {
         kittiFrame.setFrameNum(frame);
         kittiFrame.loadTrackFile();
         kittiFrame.publishImage();
-
-        MATRIX A;
 
         kittiFrame.setPclPath(DATA_PATH + "/velodyne_points/data/" + buffer.str() + ".bin");
         kittiFrame.loadPclFile();
@@ -64,9 +63,6 @@ int main(int argc, char **argv) {
 
         TRANSMYCAR my_car_trans = kittiFrame.getMyCarTrans();
         map <int , position> obj_curr = kittiFrame.getMyObjPos();
-        //int temp =  kittiFrame.getMyObjPos().size();
-        //cout<< "obj_curr size = " << obj_curr.size() <<endl;
-        //cout<< "my_object size = " << my_object.size() <<endl;
         adjustMyObjPos(frame, 10, my_car_trans.vf, my_car_trans.vl, my_car_trans.yawn, obj_curr);
         kittiFrame.publishMyObjPath(my_object);
 
@@ -83,7 +79,6 @@ int main(int argc, char **argv) {
                 obj_curr.clear();
             }
         else frame++;
-        ROS_INFO("Now IM publishing frame! %d",frame);
         loop_rate.sleep();  
     }
 

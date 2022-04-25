@@ -7,7 +7,6 @@
 #include <pcl/point_types.h>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
-
 #include <sensor_msgs/PointCloud2.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
@@ -22,102 +21,79 @@
 #include <sstream>
 #include <vector>
 #include <map>
-
 #include <kittiAnalysis/KittiUtils.h>
-
 class KittiFrame {
-
 public:
     std::map <std::string, color> COLOR_TYPE;
-
-    KittiFrame();
-    void init();
-    void setFrameNum(int frame);
-    void loadTrackFile();
-    void publishImage();
+    KittiFrame(); // only run once.
+    void init(); // initialize the kittiframe, in main it can run many times.
+    void setFrameNum(int frame); // set current frame's id.
+    void loadTrackFile(); // load the tracking file
+    void publishImage(); // publish Image and draw 2d box
     void setImagePath(std::string imagePath);   
     void setTrackPath(std::string trackPath);     
-
-   
     void setPclPath(std::string pclPath);
-    void loadPclFile();
-    void publishPcl();
-
+    void loadPclFile(); // load the velodyne data (.bin)
+    void publishPcl(); // publish velodyne 
     void setMyCarPath(std::string myCarPath);
-    void adjustMyCar();
-    void adjustMyStrip();
-    void loadCaliMatrix(float R[4][4], float T[4][4]);
-    void adjustMy3dBox();
-    void publishMarkerArray();
-
+    void adjustMyCar(); // set the marker about my car.
+    void adjustMyStrip();// set the 90° view lines
+    void loadCaliMatrix(float R[4][4], float T[4][4]); // read the Rectify Matrix and the Translation Matrix
+    void adjustMy3dBox(); // draw the 3d objects' box
+    void publishMarkerArray(); // publish my car, the view lines and 3d object boxes.
     void setIMUPath(std::string IMUPath);
-    void loadIMUFile();
-    void publishIMU();
-
-    TRANSMYCAR getMyCarTrans();
-    void publishMyCarPath(vector <position> my_car_path);
-    // void adjustMyCarPath(float x, float y);    
-    std::map <int , position > getMyObjPos();
-    void publishMyObjPath(map <int , vector<position> > my_obj_path);
-
-    void adjustObjDistance(float mycar_array[3][8]);
+    void loadIMUFile(); // load the IMU file (oxts). I construct a struct called trackObject to store them.
+    void publishIMU(); // a purple arrow.
+    TRANSMYCAR getMyCarTrans(); // TRANSMYCAR is the struct called trackObject.
+    void publishMyCarPath(vector <position> my_car_path); // the trail of my car.
+    std::map <int , position > getMyObjPos(); // the position of current objects.
+    void publishMyObjPath(map <int , vector<position> > my_obj_path); 
+    void adjustObjDistance(float mycar_array[3][8]); // count the distance between my car and other objects.
     void countMinDistance(position pointP, MATRIX box, float& dis_min, position& pos_min_1, position& pos_min_2); // 点到对应3D盒子的俯视图最短距离
     void publishObjDistance();
 
 protected:
-
     int frame_number;
     MATRIX R0_rect;
     MATRIX Tvelo_cam;
-//image
+// image
     ros::NodeHandle nh_image;    
     std::string image_path;
     std::string tracking_path;
     image_transport::Publisher pub_image;
-
-//point_cloud
+// point_cloud
     ros::NodeHandle nh_pcl;
     std::string pcl_path;
-    sensor_msgs::PointCloud2 cloud_msg; //点云信息（ROS）
+    sensor_msgs::PointCloud2 cloud_msg; // velodyne binary file
     ros::Publisher pub_pcl;
-
-
-    visualization_msgs::MarkerArray marker_array; //marker阵列
-//Marker myCar
+    visualization_msgs::MarkerArray marker_array; // marker array for my car, velodyne and 3d boxes.
+// Marker myCar
     ros::NodeHandle nh_markers;
     std::string my_car_path;
-    visualization_msgs::Marker marker_car; //车子模型信息(ROS)
+    visualization_msgs::Marker marker_car; // my car
     ros::Publisher pub_my_car;
-
-//Marker strip
-    //ros::NodeHandle nh_strip;
+// Marker strip
     visualization_msgs::Marker marker_strip_1; // why do i use two marker_strips ?
     visualization_msgs::Marker marker_strip_2;
-//Marker 3DBOX
+// Marker 3DBOX
     // vector <visualization_msgs::Marker> 3DBoxMarkers; //it's unnessary.
-
 // IMU&&GPS
     IMUMYCAR my_car_imu;
     TRANSMYCAR my_car_trans;
     std::string IMU_path;
     ros::NodeHandle nh_IMU;
     ros::Publisher pub_IMU;
-
-
 // tracking
-    long tracking_offset;
-    std::vector <trackObject> tracking_objects;
-    std::map<int , MATRIX> location_velo_all;
-
+    long tracking_offset; // use for locating the file
+    std::vector <trackObject> tracking_objects; // current objects
+    std::map<int , MATRIX> location_velo_all; // current objects in velodyne coordinates
 // object motion path
     visualization_msgs::MarkerArray marker_array_path;
     ros::NodeHandle nh_path_array;
     ros::Publisher pub_path_array;
-    std::map <int , position > obj_center;
-
+    std::map <int , position > obj_center; 
 // object distance
     visualization_msgs::MarkerArray marker_array_distance;
     ros::NodeHandle nh_distance_array;
     ros::Publisher pub_distance_array;
-
 };

@@ -9,6 +9,7 @@
 using namespace std;
 typedef vector< vector<float> > MATRIX;
 
+// tracking file data
 struct trackObject{
     int tk_frame;
     int tk_id;
@@ -24,6 +25,7 @@ struct trackObject{
     };
 typedef trackObject TRACKOBJ;
 
+// IMU file data
 struct imuObject{
     float oxts_unit[3]; // latitude longitude altitude
     float angle[3]; // roll pitch yawn 
@@ -35,6 +37,7 @@ struct imuObject{
 };
 typedef imuObject IMUMYCAR;
 
+// my car's velocity_forward, velocity_left and yawn angle
 struct myCarTrans{
     float vf;
     float vl;
@@ -42,32 +45,33 @@ struct myCarTrans{
 };
 typedef myCarTrans TRANSMYCAR;
 
-struct color{
+// just color 
+struct color{ 
     int b;
     int g;
     int r;
 };
 
+// 2d position (not strict)
 struct position {
     float x;
     float y;
 //  float z; // we needn't use it 
     float yawn;
 };
-
 extern MATRIX CreateMatrix (int m, int n); // create mxn matrix
 extern MATRIX Create3DCorner (float h, float w, float l);
-extern MATRIX R_roty (float yawn);
+extern MATRIX R_roty (float yawn); // the rotation matrix about the yawn angle
 extern MATRIX MultiplyMatrix (MATRIX A, MATRIX B);
-extern MATRIX InverseMatrix (MATRIX A);
-extern MATRIX CamToVelo (MATRIX A, MATRIX R0_rect, MATRIX Tvelo_cam);
-extern float vectInnerProduct2d(position a, position b);
-extern float vectExterProduct2d(position a, position b); // just return the vector mold
+extern MATRIX InverseMatrix (MATRIX A); 
+extern MATRIX CamToVelo (MATRIX A, MATRIX R0_rect, MATRIX Tvelo_cam); // camera 2 coordinates to velo coordinates
+extern float vectInnerProduct2d(position a, position b); // return the ans 
+extern float vectExterProduct2d(position a, position b); // return the vector mold
 extern vector <position> my_car;
 extern map <int , vector<position> > my_object; // 每一个track_id对应一个路径集合
-extern void adjustMyCarPos(int frame, int fps, float vf, float vl, float yawn);
-void updateObjPath(vector <position>& obj, int fps, float vf, float vl, float yawn);
-extern void adjustMyObjPos(int frame, int fps, float vf, float vl, float yawn, map<int, position> obj_curr);
+extern void adjustMyCarPos(int frame, int fps, float vf, float vl, float yawn); // counting past mycar position
+void updateObjPath(vector <position>& obj, int fps, float vf, float vl, float yawn); // update past object position
+extern void adjustMyObjPos(int frame, int fps, float vf, float vl, float yawn, map<int, position> obj_curr); // counting past object position
 
 
 #endif

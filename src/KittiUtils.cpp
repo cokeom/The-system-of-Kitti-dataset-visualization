@@ -154,15 +154,10 @@ float vectInnerProduct2d(position a, position b) {
     float ans = a.x * b.x + a.y * b.y;
     return ans;
 }
-
-
-
 float vectExterProduct2d(position a, position b) {
     float ans = a.x * b.y - a.y * b.x;
     return abs(ans);
 }
-
-
 MATRIX Create3DCorner (float h, float w, float l) {
     MATRIX A = CreateMatrix(3,8);
     A[0][0] = l/2;

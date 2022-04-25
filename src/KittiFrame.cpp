@@ -45,8 +45,7 @@ void KittiFrame::loadTrackFile() {
     tracking_objects.clear();
     fstream infile(tracking_path.c_str(), ios::in);
     if(frame_number == 0)tracking_offset = 0;
-    infile.seekg(tracking_offset , ios::beg);
-
+    infile.seekg(tracking_offset , ios::beg); // set mark in order to continue reading file. 
     if(!infile) {
         cerr << "open error!!!" << endl;
         exit(1);
