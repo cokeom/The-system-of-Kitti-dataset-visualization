@@ -486,7 +486,7 @@ void KittiFrame::publishIMU() {
 TRANSMYCAR KittiFrame::getMyCarTrans() {
     return my_car_trans;
 }
-void KittiFrame::publishMyCarPath(vector <position> my_car_path) {
+void KittiFrame::publishMyCarPath(vector <POS2D> my_car_path) {
     
     visualization_msgs::Marker marker_my_car;
 
@@ -522,10 +522,10 @@ void KittiFrame::publishMyCarPath(vector <position> my_car_path) {
     //cout << "markers array size = " <<marker_array_path.markers.size()<<endl;
    
 }
-std::map <int , position > KittiFrame::getMyObjPos() {
+std::map <int , POS2D > KittiFrame::getMyObjPos() {
     return obj_center;
 }
-void KittiFrame::publishMyObjPath(map <int , vector<position> > my_obj_path) {
+void KittiFrame::publishMyObjPath(map <int , vector<POS2D> > my_obj_path) {
     int size1 = tracking_objects.size();
     //cout<< "tracking_objects size" << size1 <<endl;
     for(int i=0; i < size1; i++)
@@ -568,9 +568,9 @@ void KittiFrame::publishMyObjPath(map <int , vector<position> > my_obj_path) {
        
     }
 }
-void KittiFrame::countMinDistance(position pointP, MATRIX box, float& dis_min, position& pos_min_1, position& pos_min_2) {
-    position pointA,pointB;
-    position vectAP, vectBP, vectAB, vectBA;
+void KittiFrame::countMinDistance(POS2D pointP, MATRIX box, float& dis_min, POS2D& pos_min_1, POS2D& pos_min_2) {
+    POS2D pointA,pointB;
+    POS2D vectAP, vectBP, vectAB, vectBA;
     float dis_curr ;
     for(int k = 0; k < 4; k++) {
 
@@ -639,7 +639,7 @@ void KittiFrame::adjustObjDistance(float mycar_array[3][8]) {
         MATRIX obj_curr = location_velo_all[tracking_objects[i].tk_id];
 
         float dis_min = FLT_MAX;
-        position pos_min_A, pos_min_B, pos_curr;
+        POS2D pos_min_A, pos_min_B, pos_curr;
 
         for(int j = 0; j < 4; j++){ // 4 * 1
             pos_curr.x = mycar[0][j];

@@ -1,8 +1,8 @@
 #include <kittiAnalysis/KittiUtils.h>
 using namespace std;
 
-vector <position> my_car;
-map <int , vector<position> > my_object;
+vector <POS2D> my_car;
+map <int , vector<POS2D> > my_object;
 MATRIX CreateMatrix(int m, int n) {
     vector< vector<float> > v;
     for (int i=0; i<m; i++) {
@@ -150,11 +150,11 @@ MATRIX InverseMatrix (MATRIX A) { //用LU分解算法
     return W_n;
     //return A;
 }
-float vectInnerProduct2d(position a, position b) {
+float vectInnerProduct2d(POS2D a, POS2D b) {
     float ans = a.x * b.x + a.y * b.y;
     return ans;
 }
-float vectExterProduct2d(position a, position b) {
+float vectExterProduct2d(POS2D a, POS2D b) {
     float ans = a.x * b.y - a.y * b.x;
     return abs(ans);
 }
@@ -202,7 +202,7 @@ MATRIX CamToVelo (MATRIX A, MATRIX R0_rect, MATRIX Tvelo_cam){
     return MultiplyMatrix(Trans_Matrix, A);
     //return A;
 }
-void updateObjPath(vector <position>& obj, int fps, float vf, float vl, float yawn) {
+void updateObjPath(vector <POS2D>& obj, int fps, float vf, float vl, float yawn) {
     int size = obj.size();
     if(size == 0) return ; // 如果是初次加入，则不需要更新
 
@@ -215,7 +215,7 @@ void updateObjPath(vector <position>& obj, int fps, float vf, float vl, float ya
     }
 }
 void adjustMyCarPos(int frame, int fps, float vf, float vl, float yawn) {
-    position temp;
+    POS2D temp;
     if(frame == 0 ) {
         my_car.clear();
         temp.x = 0;
@@ -232,35 +232,35 @@ void adjustMyCarPos(int frame, int fps, float vf, float vl, float yawn) {
     my_car.push_back(temp);
     return ;
 }
-void adjustMyObjPos(int frame, int fps, float vf, float vl, float yawn, map<int, position> obj_curr) {
-    position temp;
+void adjustMyObjPos(int frame, int fps, float vf, float vl, float yawn, map<int, POS2D> obj_curr) {
+    POS2D temp;
     if(frame == 0 ) {
         for(int i = 0;i < my_object.size();i++){
             my_object[i].clear();
         }
         my_object.clear();
         
-        map<int, position >::iterator it = obj_curr.begin();
+        map<int, POS2D >::iterator it = obj_curr.begin();
         for(it = obj_curr.begin(); it != obj_curr.end(); it++) {
             int track_id = it->first;
-            position track_pos = it->second;
+            POS2D track_pos = it->second;
             track_pos.yawn = yawn;
             my_object[track_id].push_back(track_pos);
         }
         return ;
 	}
 
-    map<int, vector<position> >::iterator it_obj = my_object.begin(); //从头更新旧的坐标
+    map<int, vector<POS2D> >::iterator it_obj = my_object.begin(); //从头更新旧的坐标
     for(it_obj = my_object.begin(); it_obj != my_object.end(); it_obj++) { //所有更新，不管有无出现
         int track_id = it_obj->first;
-        //vector<position> track_pos = it_obj->second;
+        //vector<POS2D> track_pos = it_obj->second;
         updateObjPath(it_obj->second, fps, vf, vl, yawn);
     }
 
-    map<int, position >::iterator it_curr = obj_curr.begin();
+    map<int, POS2D >::iterator it_curr = obj_curr.begin();
     for(it_curr = obj_curr.begin(); it_curr != obj_curr.end(); it_curr++) { //加入出现的物体位置
         int track_id = it_curr->first;
-        position track_pos = it_curr->second;
+        POS2D track_pos = it_curr->second;
         track_pos.yawn = yawn;
         my_object[track_id].push_back(track_pos);
     }

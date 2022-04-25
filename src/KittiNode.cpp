@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
         kittiFrame.publishIMU();
 
         TRANSMYCAR my_car_trans = kittiFrame.getMyCarTrans();
-        map <int , position> obj_curr = kittiFrame.getMyObjPos();
+        map <int , POS2D> obj_curr = kittiFrame.getMyObjPos();
         adjustMyObjPos(frame, 10, my_car_trans.vf, my_car_trans.vl, my_car_trans.yawn, obj_curr);
         kittiFrame.publishMyObjPath(my_object);
 

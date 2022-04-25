@@ -59,19 +59,20 @@ struct position {
 //  float z; // we needn't use it 
     float yawn;
 };
+typedef position POS2D;
 extern MATRIX CreateMatrix (int m, int n); // create mxn matrix
 extern MATRIX Create3DCorner (float h, float w, float l);
 extern MATRIX R_roty (float yawn); // the rotation matrix about the yawn angle
 extern MATRIX MultiplyMatrix (MATRIX A, MATRIX B);
 extern MATRIX InverseMatrix (MATRIX A); 
 extern MATRIX CamToVelo (MATRIX A, MATRIX R0_rect, MATRIX Tvelo_cam); // camera 2 coordinates to velo coordinates
-extern float vectInnerProduct2d(position a, position b); // return the ans 
-extern float vectExterProduct2d(position a, position b); // return the vector mold
-extern vector <position> my_car;
-extern map <int , vector<position> > my_object; // 每一个track_id对应一个路径集合
+extern float vectInnerProduct2d(POS2D a, POS2D b); // return the ans 
+extern float vectExterProduct2d(POS2D a, POS2D b); // return the vector mold
+extern vector <POS2D> my_car;
+extern map <int , vector<POS2D> > my_object; // 每一个track_id对应一个路径集合
 extern void adjustMyCarPos(int frame, int fps, float vf, float vl, float yawn); // counting past mycar position
-void updateObjPath(vector <position>& obj, int fps, float vf, float vl, float yawn); // update past object position
-extern void adjustMyObjPos(int frame, int fps, float vf, float vl, float yawn, map<int, position> obj_curr); // counting past object position
+void updateObjPath(vector <POS2D>& obj, int fps, float vf, float vl, float yawn); // update past object position
+extern void adjustMyObjPos(int frame, int fps, float vf, float vl, float yawn, map<int, POS2D> obj_curr); // counting past object position
 
 
 #endif

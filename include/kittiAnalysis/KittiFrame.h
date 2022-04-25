@@ -45,11 +45,11 @@ public:
     void loadIMUFile(); // load the IMU file (oxts). I construct a struct called trackObject to store them.
     void publishIMU(); // a purple arrow.
     TRANSMYCAR getMyCarTrans(); // TRANSMYCAR is the struct called trackObject.
-    void publishMyCarPath(vector <position> my_car_path); // the trail of my car.
-    std::map <int , position > getMyObjPos(); // the position of current objects.
-    void publishMyObjPath(map <int , vector<position> > my_obj_path); 
+    void publishMyCarPath(vector <POS2D> my_car_path); // the trail of my car.
+    std::map <int , POS2D > getMyObjPos(); // the position of current objects.
+    void publishMyObjPath(map <int , vector<POS2D> > my_obj_path); 
     void adjustObjDistance(float mycar_array[3][8]); // count the distance between my car and other objects.
-    void countMinDistance(position pointP, MATRIX box, float& dis_min, position& pos_min_1, position& pos_min_2); // 点到对应3D盒子的俯视图最短距离
+    void countMinDistance(POS2D pointP, MATRIX box, float& dis_min, POS2D& pos_min_1, POS2D& pos_min_2); // 点到对应3D盒子的俯视图最短距离
     void publishObjDistance();
 
 protected:
@@ -91,7 +91,7 @@ protected:
     visualization_msgs::MarkerArray marker_array_path;
     ros::NodeHandle nh_path_array;
     ros::Publisher pub_path_array;
-    std::map <int , position > obj_center; 
+    std::map <int , POS2D > obj_center; 
 // object distance
     visualization_msgs::MarkerArray marker_array_distance;
     ros::NodeHandle nh_distance_array;
