@@ -60,6 +60,10 @@ public:
     std::map <int , position > getMyObjPos();
     void publishMyObjPath(map <int , vector<position> > my_obj_path);
 
+    void adjustObjDistance(float mycar_array[3][8]);
+    void countMinDistance(position pointP, MATRIX box, float& dis_min, position& pos_min_1, position& pos_min_2); // 点到对应3D盒子的俯视图最短距离
+    void publishObjDistance();
+
 protected:
 
     int frame_number;
@@ -103,11 +107,17 @@ protected:
 // tracking
     long tracking_offset;
     std::vector <trackObject> tracking_objects;
+    std::map<int , MATRIX> location_velo_all;
 
 // object motion path
     visualization_msgs::MarkerArray marker_array_path;
     ros::NodeHandle nh_path_array;
     ros::Publisher pub_path_array;
-
     std::map <int , position > obj_center;
+
+// object distance
+    visualization_msgs::MarkerArray marker_array_distance;
+    ros::NodeHandle nh_distance_array;
+    ros::Publisher pub_distance_array;
+
 };

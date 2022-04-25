@@ -150,6 +150,19 @@ MATRIX InverseMatrix (MATRIX A) { //用LU分解算法
     return W_n;
     //return A;
 }
+float vectInnerProduct2d(position a, position b) {
+    float ans = a.x * b.x + a.y * b.y;
+    return ans;
+}
+
+
+
+float vectExterProduct2d(position a, position b) {
+    float ans = a.x * b.y - a.y * b.x;
+    return abs(ans);
+}
+
+
 MATRIX Create3DCorner (float h, float w, float l) {
     MATRIX A = CreateMatrix(3,8);
     A[0][0] = l/2;
@@ -194,7 +207,6 @@ MATRIX CamToVelo (MATRIX A, MATRIX R0_rect, MATRIX Tvelo_cam){
     return MultiplyMatrix(Trans_Matrix, A);
     //return A;
 }
-
 void updateObjPath(vector <position>& obj, int fps, float vf, float vl, float yawn) {
     int size = obj.size();
     if(size == 0) return ; // 如果是初次加入，则不需要更新
@@ -225,7 +237,6 @@ void adjustMyCarPos(int frame, int fps, float vf, float vl, float yawn) {
     my_car.push_back(temp);
     return ;
 }
-
 void adjustMyObjPos(int frame, int fps, float vf, float vl, float yawn, map<int, position> obj_curr) {
     position temp;
     if(frame == 0 ) {

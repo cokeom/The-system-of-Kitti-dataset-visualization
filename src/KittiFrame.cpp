@@ -1,6 +1,6 @@
 #include <kittiAnalysis/KittiFrame.h>
 using namespace std;
-
+//#define FLT_MAX         3.402823466e+38F        /* max value */ 
 KittiFrame::KittiFrame() { //construct
 
     tracking_objects.clear();
@@ -22,6 +22,7 @@ KittiFrame::KittiFrame() { //construct
 
     pub_IMU = nh_IMU.advertise <sensor_msgs::Imu> ("Imu" , 20);
     pub_path_array = nh_path_array.advertise<visualization_msgs::MarkerArray> ( "visualization_marker_path", 30);
+    pub_distance_array = nh_distance_array.advertise<visualization_msgs::MarkerArray> ( "visualization_marker_distance", 30);
     tracking_offset = 0;
 
     R0_rect = CreateMatrix(4,4);
@@ -30,7 +31,9 @@ KittiFrame::KittiFrame() { //construct
 void KittiFrame::init() {
     marker_array.markers.clear();
     marker_array_path.markers.clear();
+    marker_array_distance.markers.clear();
     obj_center.clear();
+    location_velo_all.clear();
 }
 void KittiFrame::setFrameNum(int frame) {
     frame_number = frame;
@@ -306,6 +309,8 @@ void KittiFrame::adjustMy3dBox() {
 
         MATRIX location_velo = CamToVelo(location_cam, R0_rect, Tvelo_cam); // transform into location in velo coordiation
 
+        location_velo_all[tracking_objects[i].tk_id] = location_velo; // use for counting distance
+
         visualization_msgs::Marker line_list;
         line_list.header.stamp = ros::Time(); //attention
         line_list.header.frame_id = "point_cloud" ;
@@ -479,11 +484,9 @@ void KittiFrame::publishIMU() {
   
     pub_IMU.publish(IMU_data);
 }
-
 TRANSMYCAR KittiFrame::getMyCarTrans() {
     return my_car_trans;
 }
-
 void KittiFrame::publishMyCarPath(vector <position> my_car_path) {
     
     visualization_msgs::Marker marker_my_car;
@@ -520,7 +523,6 @@ void KittiFrame::publishMyCarPath(vector <position> my_car_path) {
     //cout << "markers array size = " <<marker_array_path.markers.size()<<endl;
    
 }
-
 std::map <int , position > KittiFrame::getMyObjPos() {
     return obj_center;
 }
@@ -566,4 +568,155 @@ void KittiFrame::publishMyObjPath(map <int , vector<position> > my_obj_path) {
         marker_array_path.markers.push_back( marker_my_obj );
        
     }
+}
+void KittiFrame::countMinDistance(position pointP, MATRIX box, float& dis_min, position& pos_min_1, position& pos_min_2) {
+    position pointA,pointB;
+    position vectAP, vectBP, vectAB, vectBA;
+    float dis_curr ;
+    for(int k = 0; k < 4; k++) {
+
+        pointA.x = box[0][k % 4];
+        pointA.y = box[1][k % 4];
+        pointB.x = box[0][(k+1) % 4];
+        pointB.y = box[1][(k+1) % 4];
+
+        vectAB.x = pointB.x - pointA.x; // vector (A , B) A->B
+        vectAB.y = pointB.y - pointA.y;
+
+        vectBA.x = -1 * vectAB.x;
+        vectBA.y = -1 * vectAB.y;
+
+
+        vectAP.x = pointP.x - pointA.x;
+        vectAP.y = pointP.y - pointA.y;
+
+        vectBP.x = pointP.x - pointB.x;
+        vectBP.y = pointP.y - pointB.y;
+
+        float inner_ans1 = vectInnerProduct2d(vectAP , vectAB);
+        float inner_ans2 = vectInnerProduct2d(vectBP , vectBA);
+        float vectAPmold = sqrt(vectAP.x * vectAP.x + vectAP.y * vectAP.y);
+        float vectBPmold = sqrt(vectBP.x * vectBP.x + vectBP.y * vectBP.y);
+        if(inner_ans1 > 0 && inner_ans2 > 0) { // 锐角三角形
+            //float vectAPmold = sqrt(vectAP.x * vectAP.x + vectAP.y * vectAP.y);
+            float vectABmold = sqrt(vectAB.x * vectAB.x + vectAB.y * vectAB.y);
+            float exter_ans = vectExterProduct2d(vectAP, vectAB);
+            dis_curr = vectAPmold * (exter_ans/vectABmold);
+            if(dis_curr < dis_min) {
+                pos_min_1 = pointP;
+                float tmp = inner_ans1 / (vectABmold * vectABmold); 
+                pos_min_2.x = tmp * (pointB.x - pointA.x) + pointA.x;
+                pos_min_2.y = tmp * (pointB.y - pointA.y) + pointA.y;
+                dis_min = dis_curr;
+            }
+        }
+        else{   // 钝角三角形
+            dis_curr = min(vectAPmold, vectBPmold);
+            if(dis_curr < dis_min) {
+                if(dis_curr == vectAPmold) {
+                    pos_min_1 = pointP;
+                    pos_min_2 = pointA;
+                    dis_min = dis_curr;
+                }
+                else{
+                    pos_min_1 = pointP;
+                    pos_min_2 = pointB;
+                    dis_min = dis_curr;
+                }
+            }
+        } 
+    }
+}
+void KittiFrame::adjustObjDistance(float mycar_array[3][8]) {
+    int i;
+    for(i = 0; i < tracking_objects.size(); i++) {
+        if(tracking_objects[i].tk_id == -1) continue;
+        MATRIX mycar = CreateMatrix(3,8); // construct MATRIX struct
+        for(int i0=0; i0<3; i0++)
+            for(int j0=0; j0<8; j0++){
+                mycar[i0][j0] = mycar_array[i0][j0];
+        }
+
+        MATRIX obj_curr = location_velo_all[tracking_objects[i].tk_id];
+
+        float dis_min = FLT_MAX;
+        position pos_min_A, pos_min_B, pos_curr;
+
+        for(int j = 0; j < 4; j++){ // 4 * 1
+            pos_curr.x = mycar[0][j];
+            pos_curr.y = mycar[1][j];
+            countMinDistance(pos_curr, obj_curr, dis_min, pos_min_A, pos_min_B); // 1 * 4
+        }
+        for(int j = 0; j < 4; j++) {
+            pos_curr.x = obj_curr[0][j];
+            pos_curr.y = obj_curr[1][j];
+            countMinDistance(pos_curr, mycar, dis_min, pos_min_A, pos_min_B);
+        }
+    // now we have both the pos_min_AB and dis_min. We can construct Marker now.
+# if 1
+        visualization_msgs::Marker marker_obj_dis;
+        marker_obj_dis.header.frame_id = "point_cloud" ;
+        marker_obj_dis.header.stamp = ros::Time(); //attention
+        marker_obj_dis.ns = "my_namespace"; 
+        marker_obj_dis.id = i+2000;
+        marker_obj_dis.type = visualization_msgs::Marker::LINE_STRIP;
+        marker_obj_dis.action = visualization_msgs::Marker::ADD;
+        marker_obj_dis.lifetime = ros::Duration(0.1);
+
+        marker_obj_dis.scale.x = 0.2;
+        marker_obj_dis.scale.y = 0.2;
+        marker_obj_dis.scale.z = 0.2;
+
+        marker_obj_dis.color.a = 1.0; //if not 1.0 , it can't visualize
+        marker_obj_dis.color.r = 0.0;
+        marker_obj_dis.color.g = 0.5;
+        marker_obj_dis.color.b = 0.5;
+        
+        // print the line in Rviz
+        geometry_msgs::Point p;
+        p.x = pos_min_A.x;
+        p.y = pos_min_A.y;
+        p.z = 0.;
+        marker_obj_dis.points.push_back(p);
+
+        p.x = pos_min_B.x;
+        p.y = pos_min_B.y;
+        p.z = 0.;
+        marker_obj_dis.points.push_back(p);
+
+        marker_array_distance.markers.push_back( marker_obj_dis );
+
+        // print distance in Rviz
+        visualization_msgs::Marker dis_text;
+        dis_text.header.stamp = ros::Time(); //attention
+        dis_text.header.frame_id = "point_cloud" ;
+        dis_text.ns = "my_namespace"; 
+        dis_text.id = i+4000;
+        dis_text.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+        dis_text.action = visualization_msgs::Marker::ADD;
+        dis_text.lifetime = ros::Duration(0.1);
+
+        dis_text.scale.z = 1;
+        //ROS_INFO_STREAM("123123");
+        dis_text.color.r = 0.0;
+        dis_text.color.g = 1.0;
+        dis_text.color.b = 0.0;
+
+        dis_text.pose.orientation.w = 1.0;
+        dis_text.color.a = 1.0;
+
+        dis_text.pose.position.x = (pos_min_A.x + pos_min_B.x)/2;
+        dis_text.pose.position.y = (pos_min_A.y + pos_min_B.y)/2; 
+        dis_text.pose.position.z = 0.;
+
+        ostringstream str;
+        str << dis_min;
+        // cout << tracking_objects[i].tk_type + str.str() + "123123" <<endl;
+        dis_text.text = str.str();
+        marker_array_distance.markers.push_back( dis_text );
+# endif
+    }
+}
+void KittiFrame::publishObjDistance() {
+    pub_distance_array.publish( marker_array_distance );
 }

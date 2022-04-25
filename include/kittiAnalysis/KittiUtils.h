@@ -8,12 +8,6 @@
 #include <map>
 using namespace std;
 typedef vector< vector<float> > MATRIX;
-extern MATRIX CreateMatrix (int m, int n); // create mxn matrix
-extern MATRIX Create3DCorner (float h, float w, float l);
-extern MATRIX R_roty (float yawn);
-extern MATRIX MultiplyMatrix (MATRIX A, MATRIX B);
-extern MATRIX InverseMatrix (MATRIX A);
-extern MATRIX CamToVelo (MATRIX A, MATRIX R0_rect, MATRIX Tvelo_cam);
 
 struct trackObject{
     int tk_frame;
@@ -61,13 +55,19 @@ struct position {
     float yawn;
 };
 
+extern MATRIX CreateMatrix (int m, int n); // create mxn matrix
+extern MATRIX Create3DCorner (float h, float w, float l);
+extern MATRIX R_roty (float yawn);
+extern MATRIX MultiplyMatrix (MATRIX A, MATRIX B);
+extern MATRIX InverseMatrix (MATRIX A);
+extern MATRIX CamToVelo (MATRIX A, MATRIX R0_rect, MATRIX Tvelo_cam);
+extern float vectInnerProduct2d(position a, position b);
+extern float vectExterProduct2d(position a, position b); // just return the vector mold
 extern vector <position> my_car;
 extern map <int , vector<position> > my_object; // 每一个track_id对应一个路径集合
-
-// extern int j_temp;
-// extern void test();
 extern void adjustMyCarPos(int frame, int fps, float vf, float vl, float yawn);
 void updateObjPath(vector <position>& obj, int fps, float vf, float vl, float yawn);
 extern void adjustMyObjPos(int frame, int fps, float vf, float vl, float yawn, map<int, position> obj_curr);
-#endif
 
+
+#endif
